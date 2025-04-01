@@ -153,14 +153,6 @@ if uploaded_file:
 
     col1, col2 = st.columns([1, 1])
     with col1:
-                    st.markdown(f"<div style='background-color:#cc0000;color:white;padding:10px;border-radius:5px;text-align:center;font-weight:bold'>" + grade_prediction + "</div>", unsafe_allow_html=True)
-
-        st.markdown("<div class='section-header'>📊 Scores</div>", unsafe_allow_html=True)
-        st.markdown(f"**Centering:** {center_score}/100")
-        st.markdown(f"**Corners:** {corner_score}/100")
-        st.markdown(f"**Surface:** {surface_score}/100")
-
-        st.markdown("<div class='section-header'>🎯 Instant Grade Probability</div>", unsafe_allow_html=True)
         avg_score = (center_score + corner_score + surface_score) / 3
         if avg_score > 90:
             grade_prediction = "⭐ Most likely grade: PSA 10 ⭐"
@@ -171,6 +163,13 @@ if uploaded_file:
         else:
             grade_prediction = "Most likely grade: PSA 8 or lower"
             st.markdown(f"<div style='background-color:#cc0000;color:white;padding:10px;border-radius:5px;text-align:center;font-weight:bold'>{grade_prediction}</div>", unsafe_allow_html=True)
+
+        st.markdown("<div class='section-header'>📊 Scores</div>", unsafe_allow_html=True)
+        st.markdown(f"**Centering:** {center_score}/100")
+        st.markdown(f"**Corners:** {corner_score}/100")
+        st.markdown(f"**Surface:** {surface_score}/100")
+
+                    st.markdown(f"<div style='background-color:#cc0000;color:white;padding:10px;border-radius:5px;text-align:center;font-weight:bold'>{grade_prediction}</div>", unsafe_allow_html=True)
 
         
 
