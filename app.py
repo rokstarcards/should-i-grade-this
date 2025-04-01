@@ -12,10 +12,11 @@ st.set_page_config(page_title="Should I Grade This?", page_icon="📸")
 st.markdown("""
     <style>
     .section-header {
-        background-color: #f0f2f6;
+        background-color: #e6f0ff;
+        color: #000000;
         padding: 0.5em 1em;
         margin-top: 1.5em;
-        border-left: 5px solid #6c63ff;
+        border-left: 5px solid #0066cc;
         font-size: 1.2em;
         font-weight: bold;
     }
