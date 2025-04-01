@@ -98,11 +98,11 @@ def analyze_edges(image, rect):
     edge_region = image[y:y+h, x:x+w]
     gray = cv2.cvtColor(edge_region, cv2.COLOR_BGR2GRAY)
     edges = cv2.Canny(gray, 100, 200)
-    edge_density = np.sum(edges) / edges.size
-    return round(100 - min(edge_density * 300, 100), 2)
+    edge_pixels = np.sum(edges > 0)
+    edge_density = edge_pixels / (w * h)
+    score = 100 - min(edge_density * 400, 100)
+    return round(score, 2)
 
-def generate_surface_heatmap(image, rect):
-    return image  # Placeholder for actual heatmap logic
 
 # ---- Main Logic ----
 if uploaded_file:
@@ -112,8 +112,7 @@ if uploaded_file:
     corner_score = analyze_corners(image_np, card_rect)
     surface_score = analyze_surface(image_np, card_rect)
     edge_score = analyze_edges(image_np, card_rect)
-    heatmap_img = generate_surface_heatmap(image_np, card_rect)
-
+    
     col1, col2 = st.columns([1, 1])
     with col1:
         avg_score = (center_score + corner_score + surface_score + edge_score) / 4
@@ -150,12 +149,18 @@ if uploaded_file:
 
     with col2:
         st.markdown("<div class='section-header'>🖼️ Card Preview</div>", unsafe_allow_html=True)
-        show_heatmap = st.checkbox("Show surface heatmap overlay", value=False)
-        show_edges = st.checkbox("Show edge detection overlay", value=False)
+                show_edges = st.checkbox("Show edge detection overlay", value=False)
         if show_edges:
             edge_preview = cv2.Canny(cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY), 100, 200)
             edge_preview_rgb = cv2.cvtColor(edge_preview, cv2.COLOR_GRAY2RGB)
             overlay_img = cv2.addWeighted(image_np, 0.7, edge_preview_rgb, 0.3, 0)
             st.image(overlay_img, caption="Card with Edge Detection Overlay", use_container_width=True)
         else:
-            st.image(heatmap_img if show_heatmap else image_np, use_container_width=True)
+            # Draw bounding box and corner markers
+            x, y, w, h = card_rect
+            annotated = image_np.copy()
+            cv2.rectangle(annotated, (x, y), (x+w, y+h), (0, 255, 0), 2)
+            corners = [(x, y), (x+w, y), (x, y+h), (x+w, y+h)]
+            for cx, cy in corners:
+                cv2.circle(annotated, (cx, cy), 6, (0, 0, 255), -1)
+            st.image(annotated, caption="Card with Centering + Corner Markers", use_container_width=True)
