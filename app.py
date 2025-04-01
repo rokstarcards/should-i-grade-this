@@ -1,4 +1,4 @@
-# === Updated app.py with Phase 1 Features ===
+# === Updated app.py with Phase 1 Features and Layout Styling ===
 import streamlit as st
 import cv2
 import numpy as np
@@ -120,47 +120,55 @@ def create_grading_report(center, corner, surface, label, notes, original_img, h
     pdf.ln(5)
     pdf.cell(200, 10, txt="Surface Heatmap Overlay:", ln=True)
     pdf.image(heat_path, w=150)
-    output_buffer = BytesIO()
     pdf_output = pdf.output(dest='S').encode('latin1')
     return pdf_output
-    return output_buffer.getvalue()
 
 # ---- Main Flow ----
 if uploaded_file:
     image = Image.open(uploaded_file)
     image_np = np.array(image.convert("RGB"))
-    st.image(image_np, caption="Uploaded Card", use_container_width=True)
     center_score, card_rect = analyze_centering(image_np)
     corner_score = analyze_corners(image_np, card_rect)
     surface_score = analyze_surface(image_np, card_rect)
     heatmap_img = generate_surface_heatmap(image_np, card_rect)
 
-    st.subheader("🎯 Instant Grade Probability")
-    avg_score = (center_score + corner_score + surface_score) / 3
-    if avg_score > 90:
-        st.success("Most likely grade: PSA 10 (High confidence)")
-    elif avg_score > 80:
-        st.info("Most likely grade: PSA 9–10 (Medium confidence)")
-    elif avg_score > 70:
-        st.warning("Most likely grade: PSA 8–9 (Low confidence)")
-    else:
-        st.error("Most likely grade: Below PSA 8")
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        st.subheader("📊 Scores")
+        st.markdown(f"**Centering:** {center_score}/100")
+        st.markdown(f"**Corners:** {corner_score}/100")
+        st.markdown(f"**Surface:** {surface_score}/100")
 
-    st.subheader("📈 Grading ROI Estimate")
-    expected_profit_9 = psa9_value - grading_cost
-    expected_profit_10 = psa10_value - grading_cost
-    st.write(f"**Profit if PSA 9:** ${expected_profit_9:.2f}")
-    st.write(f"**Profit if PSA 10:** ${expected_profit_10:.2f}")
-    if expected_profit_9 < 0 and expected_profit_10 < 10:
-        st.warning("Grading may not be worth it based on ROI.")
-    else:
-        st.success("Could be worth grading depending on actual grade!")
+        st.subheader("🎯 Instant Grade Probability")
+        avg_score = (center_score + corner_score + surface_score) / 3
+        if avg_score > 90:
+            st.success("Most likely grade: PSA 10 (High confidence)")
+        elif avg_score > 80:
+            st.info("Most likely grade: PSA 9–10 (Medium confidence)")
+        elif avg_score > 70:
+            st.warning("Most likely grade: PSA 8–9 (Low confidence)")
+        else:
+            st.error("Most likely grade: Below PSA 8")
 
-    st.subheader("📤 Export Report")
-    pdf_data = create_grading_report(center_score, corner_score, surface_score, card_title, card_notes, image_np, heatmap_img)
-    st.download_button(
-        label="📄 Download PDF Report",
-        data=pdf_data,
-        file_name="grading_report.pdf",
-        mime="application/pdf"
-    )
+        st.subheader("📈 Grading ROI Estimate")
+        expected_profit_9 = psa9_value - grading_cost
+        expected_profit_10 = psa10_value - grading_cost
+        st.write(f"**Profit if PSA 9:** ${expected_profit_9:.2f}")
+        st.write(f"**Profit if PSA 10:** ${expected_profit_10:.2f}")
+        if expected_profit_9 < 0 and expected_profit_10 < 10:
+            st.warning("Grading may not be worth it based on ROI.")
+        else:
+            st.success("Could be worth grading depending on actual grade!")
+
+        st.subheader("📤 Export Report")
+        pdf_data = create_grading_report(center_score, corner_score, surface_score, card_title, card_notes, image_np, heatmap_img)
+        st.download_button(
+            label="📄 Download PDF Report",
+            data=pdf_data,
+            file_name="grading_report.pdf",
+            mime="application/pdf"
+        )
+
+    with col2:
+        st.subheader("🖼️ Card Preview")
+        st.image(image_np, caption="Uploaded Card", use_container_width=True)
