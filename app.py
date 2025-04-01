@@ -163,23 +163,22 @@ if uploaded_file:
             cv2.rectangle(annotated, (x, y), (x+w, y+h), (0, 255, 0), 2)
             corners = [(x, y), (x+w, y), (x, y+h), (x+w, y+h)]
             for cx, cy in corners:
-                cv2.circle(annotated, (cx, cy), 6, (0, 0, 255), -1)
+                cv2.circle(annotated, (cx, cy), 8, (255, 215, 0), -1)  # gold corners
 
             label_font = cv2.FONT_HERSHEY_SIMPLEX
-            label_color = (0, 0, 0)
-            label_bg = (255, 255, 255)
-
             scores = [
                 ("📍 Centering", center_score),
                 ("🔺 Corners", corner_score),
                 ("✨ Surface", surface_score),
                 ("📏 Edges", edge_score)
             ]
+            start_y = y + 15
             for i, (label, score) in enumerate(scores):
                 color = (0, 200, 0) if score > 90 else (255, 165, 0) if score > 75 else (0, 0, 255)
                 text = f"{label}: {score}/100"
-                y_pos = y - 60 + i * 25
-                cv2.putText(annotated, text, (x, max(20, y_pos)), label_font, 0.6, (255,255,255), 4, cv2.LINE_AA)
-                cv2.putText(annotated, text, (x, max(20, y_pos)), label_font, 0.6, color, 1, cv2.LINE_AA)
+                text_pos = (x + 10, start_y + i * 25)
+                cv2.rectangle(annotated, (text_pos[0]-5, text_pos[1]-15), (text_pos[0]+220, text_pos[1]+5), (50, 50, 50), -1)
+                cv2.putText(annotated, text, text_pos, label_font, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
+                cv2.putText(annotated, text, text_pos, label_font, 0.6, color, 1, cv2.LINE_AA)
 
             st.image(annotated, caption="Card with Centering + Corner Markers", use_container_width=True)
