@@ -153,17 +153,7 @@ if uploaded_file:
 
     col1, col2 = st.columns([1, 1])
     with col1:
-        st.markdown("<div class='section-header'>🎯 Instant Grade Probability</div>", unsafe_allow_html=True)
-        avg_score = (center_score + corner_score + surface_score) / 3
-        if avg_score > 90:
-            grade_prediction = "⭐ Most likely grade: PSA 10 ⭐"
-            st.markdown(f"<div style='background-color:#28a745;color:white;padding:10px;border-radius:5px;text-align:center;font-weight:bold'>" + grade_prediction + "</div>", unsafe_allow_html=True)
-        elif avg_score > 80:
-            grade_prediction = "Most likely grade: PSA 9"
-            st.markdown(f"<div style='background-color:#4CAF50;color:white;padding:10px;border-radius:5px;text-align:center;font-weight:bold'>" + grade_prediction + "</div>", unsafe_allow_html=True)
-        else:
-            grade_prediction = "Most likely grade: PSA 8 or lower"
-            st.markdown(f"<div style='background-color:#cc0000;color:white;padding:10px;border-radius:5px;text-align:center;font-weight:bold'>" + grade_prediction + "</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='background-color:#cc0000;color:white;padding:10px;border-radius:5px;text-align:center;font-weight:bold'>" + grade_prediction + "</div>", unsafe_allow_html=True)
 
         st.markdown("<div class='section-header'>📊 Scores</div>", unsafe_allow_html=True)
         st.markdown(f"**Centering:** {center_score}/100")
@@ -207,5 +197,4 @@ if uploaded_file:
         show_heatmap = st.checkbox("Show surface heatmap overlay", value=False)
         st.image(heatmap_img if show_heatmap else image_np, caption=f"Uploaded Card — {grade_prediction}", use_container_width=True)
 
-        if card_title:
-            st.markdown(f"<div style='margin-top:1em;padding:0.5em 1em;background-color:#f5f5f5;border-left:5px solid #0066cc;border-radius:5px'><strong>🃏 Card:</strong> {card_title}</div>", unsafe_allow_html=True)
+        
