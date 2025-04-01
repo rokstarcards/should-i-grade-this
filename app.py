@@ -103,7 +103,7 @@ def generate_surface_heatmap(image, rect):
     heatmap_full[y+20:y+h-20, x+20:x+w-20] = cv2.addWeighted(surface_region, 0.6, heatmap, 0.4, 0)
     return heatmap_full
 
-def create_grading_report(center, corner, surface, label, notes, original_img, heatmap_img):
+def create_grading_report(center, corner, surface, label, notes, original_img, heatmap_img, grade_prediction):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=16)
@@ -117,6 +117,10 @@ def create_grading_report(center, corner, surface, label, notes, original_img, h
     pdf.cell(200, 10, txt=f"Centering Score: {center}/100", ln=True)
     pdf.cell(200, 10, txt=f"Corner Sharpness Score: {corner}/100", ln=True)
     pdf.cell(200, 10, txt=f"Surface Score: {surface}/100", ln=True)
+    pdf.ln(5)
+    pdf.set_font("Arial", 'B', 12)
+    pdf.set_text_color(0, 102, 204)
+    pdf.cell(200, 10, txt=f"Grade Prediction: {grade_prediction}", ln=True)
     with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp_orig:
         Image.fromarray(cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)).save(tmp_orig.name)
         orig_path = tmp_orig.name
@@ -151,13 +155,14 @@ if uploaded_file:
         st.markdown("<div class='section-header'>🎯 Instant Grade Probability</div>", unsafe_allow_html=True)
         avg_score = (center_score + corner_score + surface_score) / 3
         if avg_score > 90:
-            st.success("Most likely grade: PSA 10 (High confidence)")
+            grade_prediction = "⭐ Most likely grade: PSA 10 ⭐"
+            st.markdown(f"<div style='background-color:#28a745;color:white;padding:10px;border-radius:5px;text-align:center;font-weight:bold'>{grade_prediction}</div>", unsafe_allow_html=True)
         elif avg_score > 80:
-            st.info("Most likely grade: PSA 9–10 (Medium confidence)")
-        elif avg_score > 70:
-            st.warning("Most likely grade: PSA 8–9 (Low confidence)")
+            grade_prediction = "Most likely grade: PSA 9"
+            st.markdown(f"<div style='background-color:#4CAF50;color:white;padding:10px;border-radius:5px;text-align:center;font-weight:bold'>{grade_prediction}</div>", unsafe_allow_html=True)
         else:
-            st.error("Most likely grade: Below PSA 8")
+            grade_prediction = "Most likely grade: PSA 8 or lower"
+            st.markdown(f"<div style='background-color:#cc0000;color:white;padding:10px;border-radius:5px;text-align:center;font-weight:bold'>{grade_prediction}</div>", unsafe_allow_html=True)
 
         
 
@@ -178,7 +183,7 @@ if uploaded_file:
                 st.success("Could be worth grading depending on actual grade!")
 
         st.markdown("<div class='section-header'>📤 Export Report</div>", unsafe_allow_html=True)
-        pdf_data = create_grading_report(center_score, corner_score, surface_score, card_title, card_notes, image_np, heatmap_img)
+        pdf_data = create_grading_report(center_score, corner_score, surface_score, card_title, card_notes, image_np, heatmap_img, grade_prediction)
         st.download_button(
             label="📄 Download PDF Report",
             data=pdf_data,
@@ -189,4 +194,5 @@ if uploaded_file:
     with col2:
         st.markdown("<div class='section-header'>🖼️ Card Preview</div>", unsafe_allow_html=True)
         show_heatmap = st.checkbox("Show surface heatmap overlay", value=False)
-        st.image(heatmap_img if show_heatmap else image_np, caption="Uploaded Card", use_container_width=True)
+        st.image(heatmap_img if show_heatmap else image_np, caption=f"Uploaded Card
+{grade_prediction}", use_container_width=True)
