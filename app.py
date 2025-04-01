@@ -57,21 +57,25 @@ def analyze_corners(image, rect):
     if w == 0 or h == 0:
         return 0
     corner_regions = [
-        image[y:y+20, x:x+20], image[y:y+20, x+w-20:x+w],
-        image[y+h-20:y+h, x:x+20], image[y+h-20:y+h, x+w-20:x+w]
+        image[y:y+30, x:x+30], image[y:y+30, x+w-30:x+w],
+        image[y+h-30:y+h, x:x+30], image[y+h-30:y+h, x+w-30:x+w]
     ]
-    edge_scores = []
+    sharpness_scores = []
     for region in corner_regions:
         if region.size == 0:
             continue
-        region_gray = cv2.cvtColor(region, cv2.COLOR_BGR2GRAY)
-        laplacian = cv2.Laplacian(region_gray, cv2.CV_64F).var()
-        edge_scores.append(laplacian)
-    if not edge_scores:
+        gray = cv2.cvtColor(region, cv2.COLOR_BGR2GRAY)
+        gray = cv2.GaussianBlur(gray, (3, 3), 0)
+        lap_var = cv2.Laplacian(gray, cv2.CV_64F).var()
+        corners = cv2.cornerHarris(gray, 2, 3, 0.04)
+        corner_strength = corners.max()
+        combined_score = (lap_var * 0.5 + corner_strength * 255 * 0.5)
+        sharpness_scores.append(combined_score)
+    if not sharpness_scores:
         return 0
-    avg_edge_sharpness = np.mean(edge_scores)
-    normalized = min(100, (avg_edge_sharpness / 200) * 100)
-    return round(normalized, 2)
+    avg_score = np.mean(sharpness_scores)
+    score = np.clip((avg_score / 3000) * 100, 0, 100)
+    return round(score, 2)
 
 def analyze_surface(image, rect):
     x, y, w, h = rect
@@ -82,11 +86,14 @@ def analyze_surface(image, rect):
         return 0
     gray = cv2.cvtColor(surface_region, cv2.COLOR_BGR2GRAY)
     lap_var = cv2.Laplacian(gray, cv2.CV_64F).var()
-    overexposed_pixels = np.sum(gray > 240)
-    glare_ratio = overexposed_pixels / gray.size
-    glare_penalty = min(glare_ratio * 100, 40)
-    base_score = min(100, (lap_var / 200) * 100)
-    surface_score = max(0, base_score - glare_penalty)
+    glare = np.sum(gray > 235)
+    darkness = np.sum(gray < 20)
+    texture_map = cv2.Sobel(gray, cv2.CV_64F, 1, 1, ksize=3)
+    texture_score = np.std(texture_map)
+    penalty = min((glare + darkness) / gray.size * 100, 60)
+    base_score = np.clip((lap_var / 300) * 100, 0, 100)
+    texture_bonus = np.clip(texture_score * 1.5, 0, 15)
+    surface_score = max(0, base_score - penalty + texture_bonus)
     return round(surface_score, 2)
 
 def generate_surface_heatmap(image, rect):
