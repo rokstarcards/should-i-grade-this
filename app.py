@@ -1,9 +1,8 @@
-# === Updated app.py with Phase 1 Features and Layout Styling ===
+# === Should I Grade This? PSA Prep Tool ===
 import streamlit as st
 import cv2
 import numpy as np
 from PIL import Image
-from io import BytesIO
 
 # ---- Page Config ----
 st.set_page_config(page_title="Should I Grade This?", page_icon="📸")
@@ -22,18 +21,16 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("📸 Should I Grade This?")
-st.markdown("Upload a sports card image and get centering, corner sharpness, and surface scores — with a visual heatmap, ROI estimator, and PDF report.")
+st.markdown("Upload a sports card image and get centering, corner sharpness, edge cleanliness, and surface flaw scores — with visual overlays and a grading ROI estimator. Optimized for PSA-style decisions.")
 
-# ---- Upload & Card Details Side by Side ----
+# ---- Upload & Card Details ----
 col_u1, col_u2 = st.columns([1, 1])
 with col_u1:
     uploaded_file = st.file_uploader("Upload a card image (JPG/PNG)", type=["jpg", "jpeg", "png"])
-    
 
 with col_u2:
     st.markdown("<div class='section-header'>📝 Card Details</div>", unsafe_allow_html=True)
     card_title = st.text_input("Card Title (Optional)", placeholder="e.g. 2023 Topps Chrome J-Rod Refractor")
-        
 
 # ---- Analysis Functions ----
 def analyze_centering(image):
@@ -56,32 +53,25 @@ def analyze_corners(image, rect):
     x, y, w, h = rect
     if w == 0 or h == 0:
         return 0
-
-    # Extract and analyze each corner region
     corner_regions = [
-        image[y:y+25, x:x+25],                 # top-left
-        image[y:y+25, x+w-25:x+w],             # top-right
-        image[y+h-25:y+h, x:x+25],             # bottom-left
-        image[y+h-25:y+h, x+w-25:x+w]          # bottom-right
+        image[y:y+25, x:x+25], image[y:y+25, x+w-25:x+w],
+        image[y+h-25:y+h, x:x+25], image[y+h-25:y+h, x+w-25:x+w]
     ]
-
     scores = []
     for region in corner_regions:
         if region.size == 0:
             continue
         gray = cv2.cvtColor(region, cv2.COLOR_BGR2GRAY)
         lap_var = cv2.Laplacian(gray, cv2.CV_64F).var()
-        # Apply custom curve: ideal range is ~10–40
         if lap_var < 5:
             score = 20
         elif lap_var < 15:
-            score = 40 + (lap_var - 5) * 4  # 40 to 80
+            score = 40 + (lap_var - 5) * 4
         elif lap_var < 40:
-            score = 80 + (lap_var - 15) * 0.8  # up to 100
+            score = 80 + (lap_var - 15) * 0.8
         else:
-            score = 95  # flatten out high Lap variance (often over-sharpened or glare)
+            score = 95
         scores.append(score)
-
     return round(np.mean(scores), 2) if scores else 0
 
 def analyze_surface(image, rect):
@@ -99,8 +89,7 @@ def analyze_surface(image, rect):
     scratches = np.sum((np.abs(sobel_x) > 50) | (np.abs(sobel_y) > 50))
     penalty = min((glare + scratches) / gray.size * 100, 60)
     base_score = np.clip((lap_var / 150) * 100, 0, 100)
-    surface_score = max(0, base_score - penalty)
-    return round(surface_score, 2)
+    return round(max(0, base_score - penalty), 2)
 
 def analyze_edges(image, rect):
     x, y, w, h = rect
@@ -110,14 +99,12 @@ def analyze_edges(image, rect):
     gray = cv2.cvtColor(edge_region, cv2.COLOR_BGR2GRAY)
     edges = cv2.Canny(gray, 100, 200)
     edge_density = np.sum(edges) / edges.size
-    score = 100 - min(edge_density * 300, 100)  # higher edge density = lower score (jagged/broken)
-    return round(score, 2)
+    return round(100 - min(edge_density * 300, 100), 2)
 
 def generate_surface_heatmap(image, rect):
+    return image  # Placeholder for actual heatmap logic
 
-
-
-# ---- Main Flow ----
+# ---- Main Logic ----
 if uploaded_file:
     image = Image.open(uploaded_file)
     image_np = np.array(image.convert("RGB"))
@@ -138,6 +125,7 @@ if uploaded_file:
             st.markdown(f"<div style='background-color:#4CAF50;color:white;padding:10px;border-radius:5px;text-align:center;font-weight:bold'>{grade_prediction}</div>", unsafe_allow_html=True)
         else:
             grade_prediction = "Most likely grade: PSA 8 or lower"
+            st.markdown(f"<div style='background-color:#cc0000;color:white;padding:10px;border-radius:5px;text-align:center;font-weight:bold'>{grade_prediction}</div>", unsafe_allow_html=True)
 
         st.markdown("<div class='section-header'>📊 Scores</div>", unsafe_allow_html=True)
         st.markdown(f"**Centering:** {center_score}/100")
@@ -145,16 +133,12 @@ if uploaded_file:
         st.markdown(f"**Surface:** {surface_score}/100")
         st.markdown(f"**Edges:** {edge_score}/100")
 
-                    
-        
-
         st.markdown("<div class='section-header'>📈 Grading ROI Estimator</div>", unsafe_allow_html=True)
         with st.expander("Estimate Grading ROI"):
             raw_value = st.number_input("Estimated Raw Card Value ($)", min_value=0.0, value=20.0)
             grading_cost = st.number_input("Grading Cost ($)", min_value=0.0, value=19.0)
             psa9_value = st.number_input("Estimated PSA 9 Value ($)", min_value=0.0, value=35.0)
             psa10_value = st.number_input("Estimated PSA 10 Value ($)", min_value=0.0, value=65.0)
-
             expected_profit_9 = psa9_value - grading_cost
             expected_profit_10 = psa10_value - grading_cost
             st.write(f"**Profit if PSA 9:** ${expected_profit_9:.2f}")
@@ -164,11 +148,14 @@ if uploaded_file:
             else:
                 st.success("Could be worth grading depending on actual grade!")
 
-        
-
     with col2:
         st.markdown("<div class='section-header'>🖼️ Card Preview</div>", unsafe_allow_html=True)
         show_heatmap = st.checkbox("Show surface heatmap overlay", value=False)
-        st.image(heatmap_img if show_heatmap else image_np, use_container_width=True)
-
-        
+        show_edges = st.checkbox("Show edge detection overlay", value=False)
+        if show_edges:
+            edge_preview = cv2.Canny(cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY), 100, 200)
+            edge_preview_rgb = cv2.cvtColor(edge_preview, cv2.COLOR_GRAY2RGB)
+            overlay_img = cv2.addWeighted(image_np, 0.7, edge_preview_rgb, 0.3, 0)
+            st.image(overlay_img, caption="Card with Edge Detection Overlay", use_container_width=True)
+        else:
+            st.image(heatmap_img if show_heatmap else image_np, use_container_width=True)
