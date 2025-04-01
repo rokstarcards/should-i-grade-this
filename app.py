@@ -7,7 +7,68 @@ st.set_page_config(page_title="Should I Grade This?", page_icon="📸")
 st.title("📸 Should I Grade This?")
 st.markdown("Upload a sports card image and get an automated centering and corner sharpness score. This demo uses basic image processing — no AI yet!")
 
+show_heatmap = st.checkbox("Show surface heatmap overlay", value=True)
+
+    if show_heatmap:
+        st.subheader("🧯 Surface Heatmap (Experimental)")
+        st.image(heatmap_img, caption="Problem areas: red = rough surface / glare", use_column_width=True)
+
+        # Convert to PIL and buffer for download
+        heatmap_pil = Image.fromarray(cv2.cvtColor(heatmap_img, cv2.COLOR_BGR2RGB))
+        from io import BytesIO
+        img_buffer = BytesIO()
+        heatmap_pil.save(img_buffer, format="PNG")
+        st.download_button(
+            label="📥 Download Heatmap Image",
+            data=img_buffer.getvalue(),
+            file_name="surface_heatmap.png",
+            mime="image/png"
+        )
+
+
+
 uploaded_file = st.file_uploader("Upload a card image (JPG/PNG)", type=["jpg", "jpeg", "png"])
+
+from fpdf import FPDF
+
+def create_grading_report(center, corner, surface, original_img, heatmap_img):
+    pdf = FPDF()
+    pdf.add_page()
+
+    pdf.set_font("Arial", size=16)
+    pdf.cell(200, 10, txt="📋 Grading Pre-Check Report", ln=True, align="C")
+
+    pdf.set_font("Arial", size=12)
+    pdf.ln(10)
+    pdf.cell(200, 10, txt=f"Centering Score: {center}/100", ln=True)
+    pdf.cell(200, 10, txt=f"Corner Sharpness Score: {corner}/100", ln=True)
+    pdf.cell(200, 10, txt=f"Surface Score: {surface}/100", ln=True)
+
+    # Save temp images for PDF embedding
+    from PIL import Image
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp_orig:
+        Image.fromarray(cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)).save(tmp_orig.name)
+        orig_path = tmp_orig.name
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp_heat:
+        Image.fromarray(cv2.cvtColor(heatmap_img, cv2.COLOR_BGR2RGB)).save(tmp_heat.name)
+        heat_path = tmp_heat.name
+
+    pdf.ln(10)
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt="Original Card Image:", ln=True)
+    pdf.image(orig_path, w=150)
+
+    pdf.ln(5)
+    pdf.cell(200, 10, txt="Surface Heatmap Overlay:", ln=True)
+    pdf.image(heat_path, w=150)
+
+    output_buffer = BytesIO()
+    pdf.output(output_buffer)
+    return output_buffer.getvalue()
+
 
 def analyze_centering(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -144,3 +205,15 @@ if uploaded_file:
 
     st.markdown("---")
     st.caption("This is an MVP demo using basic image processing with OpenCV. Future versions will include AI-based surface and grading predictions.")
+
+    st.subheader("📤 Export Your Report")
+
+    pdf_data = create_grading_report(center_score, corner_score, surface_score, image_np, heatmap_img)
+
+    st.download_button(
+        label="📄 Download PDF Report",
+        data=pdf_data,
+        file_name="grading_report.pdf",
+        mime="application/pdf"
+    )
+
