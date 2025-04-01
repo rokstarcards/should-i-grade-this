@@ -84,6 +84,38 @@ def analyze_surface(image, rect):
 
     return round(surface_score, 2)
 
+def generate_surface_heatmap(image, rect):
+    x, y, w, h = rect
+    if w == 0 or h == 0:
+        return image
+
+    surface_region = image[y+20:y+h-20, x+20:x+w-20]
+    gray = cv2.cvtColor(surface_region, cv2.COLOR_BGR2GRAY)
+
+    # Texture analysis using Laplacian variance per pixel
+    laplacian = cv2.Laplacian(gray, cv2.CV_64F)
+    texture_map = np.abs(laplacian)
+
+    # Glare detection (brightness over 240)
+    glare_mask = (gray > 240).astype(np.uint8) * 255
+
+    # Combine both issues into one heatmap
+    combined = cv2.normalize(texture_map, None, 0, 255, cv2.NORM_MINMAX)
+    combined = combined.astype(np.uint8)
+    combined = cv2.addWeighted(combined, 0.7, glare_mask, 0.3, 0)
+
+    # Resize back to original region size and apply colormap
+    heatmap = cv2.applyColorMap(combined, cv2.COLORMAP_JET)
+
+    # Insert back into original image
+    heatmap_full = image.copy()
+    heatmap_full[y+20:y+h-20, x+20:x+w-20] = cv2.addWeighted(
+        surface_region, 0.6, heatmap, 0.4, 0
+    )
+
+    return heatmap_full
+
+
 if uploaded_file:
     image = Image.open(uploaded_file)
     image_np = np.array(image.convert("RGB"))
@@ -93,11 +125,16 @@ if uploaded_file:
     center_score, card_rect = analyze_centering(image_np)
     corner_score = analyze_corners(image_np, card_rect)
     surface_score = analyze_surface(image_np, card_rect)
+    heatmap_img = generate_surface_heatmap(image_np, card_rect)
 
     st.subheader("🔍 Analysis Results")
     st.write(f"**Centering Score:** {center_score}/100")
     st.write(f"**Corner Sharpness Score:** {corner_score}/100")
     st.write(f"**Surface Quality Score:** {surface_score}/100")
+
+    st.subheader("🧯 Surface Heatmap (Experimental)")
+    st.image(heatmap_img, caption="Problem areas: red = rough surface / glare", use_column_width=True)
+
 
     if center_score > 85 and corner_score > 80 and surface_score > 75:
         st.success("Looks like a solid candidate for grading!")
