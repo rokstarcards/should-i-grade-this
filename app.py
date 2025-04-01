@@ -147,20 +147,15 @@ if uploaded_file:
         cols2 = st.columns(2)
         with cols2[0]:
             psa9_value = st.number_input("PSA 9 Value ($)", min_value=0.0, value=35.0)
+            st.markdown(f"<span style='font-size: 0.9em;'>💵 <strong>Profit:</strong> ${psa9_value - grading_cost:.2f}</span>", unsafe_allow_html=True)
         with cols2[1]:
             psa10_value = st.number_input("PSA 10 Value ($)", min_value=0.0, value=65.0)
+            st.markdown(f"<span style='font-size: 0.9em;'>💰 <strong>Profit:</strong> ${psa10_value - grading_cost:.2f}</span>", unsafe_allow_html=True)
 
-        expected_profit_9 = psa9_value - grading_cost
-        expected_profit_10 = psa10_value - grading_cost
-
-        st.markdown("<div style='padding-top:0.5em; font-size: 1em;'>", unsafe_allow_html=True)
-        st.write(f"**Profit if PSA 9:** ${expected_profit_9:.2f}")
-        st.write(f"**Profit if PSA 10:** ${expected_profit_10:.2f}")
         if expected_profit_9 < 0 and expected_profit_10 < 10:
             st.warning("Grading may not be worth it based on ROI.")
         else:
             st.success("Could be worth grading depending on actual grade!")
-        st.markdown("</div>", unsafe_allow_html=True)
 
     with col2:
         st.image(image_np, caption="Original Card Preview", use_container_width=True)
