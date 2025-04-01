@@ -28,7 +28,10 @@ with col_u1:
     uploaded_file = st.file_uploader("Upload a card image (JPG/PNG)", type=["jpg", "jpeg", "png"])
 
 with col_u2:
-    card_title = st.text_input("Card Title (Optional)", placeholder="e.g. 2023 Topps Chrome J-Rod Refractor")
+    file_details = st.file_uploader('Card Image Details')
+    if uploaded_file:
+        st.markdown(f'**Filename:** {uploaded_file.name}')
+        st.markdown(f'**File Size:** {uploaded_file.size / 1024:.2f} KB')
 
 # ---- Analysis Functions ----
 def analyze_centering(image, rect):
@@ -135,6 +138,19 @@ if uploaded_file:
 
     # Step 4: Recalculate centering score based on adjusted rectangle
     center_score, card_rect = analyze_centering(image_np, (adjusted_x, adjusted_y, adjusted_w, adjusted_h))
+
+    # Step 5: Calculate ROI
+    raw_value = st.number_input("Raw Value ($)", min_value=0.0, value=20.0)
+    grading_cost = st.number_input("Grading Cost ($)", min_value=0.0, value=19.0)
+    psa9_value = st.number_input("PSA 9 Value ($)", min_value=0.0, value=35.0)
+    psa10_value = st.number_input("PSA 10 Value ($)", min_value=0.0, value=65.0)
+
+    expected_profit_9 = (psa9_value - grading_cost) + raw_value
+    expected_profit_10 = (psa10_value - grading_cost) + raw_value
+
+    # Display profits
+    st.markdown(f"<span style='font-size: 1.2em; font-weight:bold;'>💵 <strong>Profit if PSA 9:</strong> ${expected_profit_9:.2f}</span>", unsafe_allow_html=True)
+    st.markdown(f"<span style='font-size: 1.2em; font-weight:bold;'>💰 <strong>Profit if PSA 10:</strong> ${expected_profit_10:.2f}</span>", unsafe_allow_html=True)
 
     # Display centering score
     st.write(f"Centering Score: {center_score}/100")
