@@ -29,12 +29,7 @@ st.markdown("Upload a sports card image and get centering, corner sharpness, and
 # ---- Upload & Card Details Side by Side ----
 col_u1, col_u2 = st.columns([1, 1])
 with col_u1:
-    uploaded_file = st.file_uploader("", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
-    st.markdown("""
-        <div style='border: 2px dashed #ccc; border-radius: 10px; padding: 1em; text-align: center; background-color: #fafafa;'>
-            <span style='font-size: 1.1em;'>📥 Click or drag a card image file here to upload</span>
-        </div>
-    """, unsafe_allow_html=True)
+    uploaded_file = st.file_uploader("Upload a card image (JPG/PNG)", type=["jpg", "jpeg", "png"])
     
 
 with col_u2:
