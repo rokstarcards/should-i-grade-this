@@ -148,8 +148,8 @@ if uploaded_file:
                 st.success("Could be worth grading depending on actual grade!")
 
     with col2:
-        st.markdown("<div class='section-header'>🖼️ Card Preview</div>", unsafe_allow_html=True)
-                    show_edges = st.checkbox("Show edge detection overlay", value=False)
+    st.markdown("<div class='section-header'>🖼️ Card Preview</div>", unsafe_allow_html=True)
+    show_edges = st.checkbox("Show edge detection overlay", value=False)
         if show_edges:
             edge_preview = cv2.Canny(cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY), 100, 200)
             edge_preview_rgb = cv2.cvtColor(edge_preview, cv2.COLOR_GRAY2RGB)
@@ -168,14 +168,16 @@ if uploaded_file:
             label_color = (0, 0, 0)
             label_bg = (255, 255, 255)
 
-            scores_text = [
-                f"Centering: {center_score}",
-                f"Corners: {corner_score}",
-                f"Surface: {surface_score}",
-                f"Edges: {edge_score}"
+            scores = [
+                ("📍 Centering", center_score),
+                ("🔺 Corners", corner_score),
+                ("✨ Surface", surface_score),
+                ("📏 Edges", edge_score)
             ]
-            for i, text in enumerate(scores_text):
-                y_pos = y - 60 + i * 20
-                cv2.putText(annotated, text, (x, max(15, y_pos)), label_font, 0.5, label_bg, 4, cv2.LINE_AA)
-                cv2.putText(annotated, text, (x, max(15, y_pos)), label_font, 0.5, label_color, 1, cv2.LINE_AA)
+            for i, (label, score) in enumerate(scores):
+                color = (0, 200, 0) if score > 90 else (255, 165, 0) if score > 75 else (0, 0, 255)
+                text = f"{label}: {score}/100"
+                y_pos = y - 60 + i * 25
+                cv2.putText(annotated, text, (x, max(20, y_pos)), label_font, 0.6, (255,255,255), 4, cv2.LINE_AA)
+                cv2.putText(annotated, text, (x, max(20, y_pos)), label_font, 0.6, color, 1, cv2.LINE_AA)
             st.image(annotated, caption="Card with Centering + Corner Markers", use_container_width=True)
