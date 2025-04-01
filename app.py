@@ -72,7 +72,8 @@ def analyze_corners(image, rect):
     if not edge_scores:
         return 0
     avg_edge_sharpness = np.mean(edge_scores)
-    return round(min(100, max(0, avg_edge_sharpness)), 2)
+    normalized = min(100, (avg_edge_sharpness / 200) * 100)
+    return round(normalized, 2)
 
 def analyze_surface(image, rect):
     x, y, w, h = rect
@@ -86,8 +87,9 @@ def analyze_surface(image, rect):
     overexposed_pixels = np.sum(gray > 240)
     glare_ratio = overexposed_pixels / gray.size
     glare_penalty = min(glare_ratio * 100, 40)
-    base_score = min(100, lap_var)
-    return round(max(0, base_score - glare_penalty), 2)
+    base_score = min(100, (lap_var / 200) * 100)
+    surface_score = max(0, base_score - glare_penalty)
+    return round(surface_score, 2)
 
 def generate_surface_heatmap(image, rect):
     x, y, w, h = rect
@@ -151,6 +153,18 @@ if uploaded_file:
 
     col1, col2 = st.columns([1, 1])
     with col1:
+        st.markdown("<div class='section-header'>🎯 Instant Grade Probability</div>", unsafe_allow_html=True)
+        avg_score = (center_score + corner_score + surface_score) / 3
+        if avg_score > 90:
+            grade_prediction = "⭐ Most likely grade: PSA 10 ⭐"
+            st.markdown(f"<div style='background-color:#28a745;color:white;padding:10px;border-radius:5px;text-align:center;font-weight:bold'>" + grade_prediction + "</div>", unsafe_allow_html=True)
+        elif avg_score > 80:
+            grade_prediction = "Most likely grade: PSA 9"
+            st.markdown(f"<div style='background-color:#4CAF50;color:white;padding:10px;border-radius:5px;text-align:center;font-weight:bold'>" + grade_prediction + "</div>", unsafe_allow_html=True)
+        else:
+            grade_prediction = "Most likely grade: PSA 8 or lower"
+            st.markdown(f"<div style='background-color:#cc0000;color:white;padding:10px;border-radius:5px;text-align:center;font-weight:bold'>" + grade_prediction + "</div>", unsafe_allow_html=True)
+
         st.markdown("<div class='section-header'>📊 Scores</div>", unsafe_allow_html=True)
         st.markdown(f"**Centering:** {center_score}/100")
         st.markdown(f"**Corners:** {corner_score}/100")
