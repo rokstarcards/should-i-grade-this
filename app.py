@@ -53,25 +53,43 @@ def analyze_centering(image):
     return round(center_score, 2), (x, y, w, h)
 
 def analyze_corners(image, rect):
+    def angle_between(p1, p2, p3):
+        a = np.array(p1)
+        b = np.array(p2)
+        c = np.array(p3)
+        ba = a - b
+        bc = c - b
+        cosine_angle = np.dot(ba, bc) / (np.linalg.norm(ba) * np.linalg.norm(bc))
+        angle = np.arccos(np.clip(cosine_angle, -1.0, 1.0))
+        return np.degrees(angle)
+
     x, y, w, h = rect
     if w == 0 or h == 0:
         return 0
-    corner_regions = [
-        image[y:y+20, x:x+20], image[y:y+20, x+w-20:x+w],
-        image[y+h-20:y+h, x:x+20], image[y+h-20:y+h, x+w-20:x+w]
-    ]
-    edge_scores = []
-    for region in corner_regions:
-        if region.size == 0:
-            continue
-        gray = cv2.cvtColor(region, cv2.COLOR_BGR2GRAY)
-        lap_var = cv2.Laplacian(gray, cv2.CV_64F).var()
-        edge_scores.append(lap_var)
-    if not edge_scores:
+    cropped = image[y:y+h, x:x+w]
+    gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    edges = cv2.Canny(blurred, 50, 150)
+    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if not contours:
         return 0
-    avg_edge_sharpness = np.mean(edge_scores)
-    score = np.clip((avg_edge_sharpness / 100) * 100, 0, 100)
-    return round(score, 2)
+    card_contour = max(contours, key=cv2.contourArea)
+    peri = cv2.arcLength(card_contour, True)
+    approx = cv2.approxPolyDP(card_contour, 0.02 * peri, True)
+    if len(approx) != 4:
+        return 50  # can't detect 4 corners = penalty
+
+    corners = [tuple(pt[0]) for pt in approx]
+    total_score = 0
+    for i in range(4):
+        p1 = corners[i - 1]
+        p2 = corners[i]
+        p3 = corners[(i + 1) % 4]
+        angle = angle_between(p1, p2, p3)
+        sharpness = 180 - angle  # ideal ~90 degrees
+        corner_score = max(0, min(100, 100 - abs(90 - sharpness)*2))
+        total_score += corner_score
+    return round(total_score / 4, 2)
 
 def analyze_surface(image, rect):
     x, y, w, h = rect
