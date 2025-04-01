@@ -119,35 +119,9 @@ if uploaded_file:
             grade_prediction = "⭐ Most likely grade: PSA 10 ⭐"
             st.markdown(f"<div style='background-color:#28a745;color:white;padding:10px;border-radius:5px;text-align:center;font-weight:bold'>{grade_prediction}</div>", unsafe_allow_html=True)
 
-        else:
-            grade_prediction = "Most likely grade: PSA 8 or lower"
-            st.markdown(f"<div style='background-color:#cc0000;color:white;padding:10px;border-radius:5px;text-align:center;font-weight:bold'>{grade_prediction}</div>", unsafe_allow_html=True)
 
     with col1:
-        st.markdown("<div class='section-header'>📊 Scores</div>", unsafe_allow_html=True)
-        score_data = {
-            "📍 Centering": center_score,
-            "🔺 Corners": corner_score,
-            "✨ Surface": surface_score,
-            "📏 Edges": edge_score
-        }
-        for label, score in score_data.items():
-            st.markdown(f"<div style='padding:6px 0; font-size: 1em;'>🎯 <strong>{label}</strong>: {score}/100</div>", unsafe_allow_html=True)
 
-        st.markdown("<div class='section-header'>📈 Grading ROI Estimator</div>", unsafe_allow_html=True)
-        with st.expander("Estimate Grading ROI"):
-            raw_value = st.number_input("Estimated Raw Card Value ($)", min_value=0.0, value=20.0)
-            grading_cost = st.number_input("Grading Cost ($)", min_value=0.0, value=19.0)
-            psa9_value = st.number_input("Estimated PSA 9 Value ($)", min_value=0.0, value=35.0)
-            psa10_value = st.number_input("Estimated PSA 10 Value ($)", min_value=0.0, value=65.0)
-            expected_profit_9 = psa9_value - grading_cost
-            expected_profit_10 = psa10_value - grading_cost
-            st.write(f"**Profit if PSA 9:** ${expected_profit_9:.2f}")
-            st.write(f"**Profit if PSA 10:** ${expected_profit_10:.2f}")
-            if expected_profit_9 < 0 and expected_profit_10 < 10:
-                st.warning("Grading may not be worth it based on ROI.")
-            else:
-                st.success("Could be worth grading depending on actual grade!")
 
         else:
             grade_prediction = "Most likely grade: PSA 8 or lower"
