@@ -148,7 +148,7 @@ if uploaded_file:
                 st.success("Could be worth grading depending on actual grade!")
 
     with col2:
-    st.markdown("<div class='section-header'>🖼️ Card Preview</div>", unsafe_allow_html=True)
+        st.markdown("<div class='section-header'>🖼️ Card Preview</div>", unsafe_allow_html=True)
     show_edges = st.checkbox("Show edge detection overlay", value=False)
         if show_edges:
             edge_preview = cv2.Canny(cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY), 100, 200)
