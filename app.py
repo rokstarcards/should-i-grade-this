@@ -161,12 +161,6 @@ if uploaded_file:
         else:
             st.success("Could be worth grading depending on actual grade!")
         st.markdown("</div>", unsafe_allow_html=True)
-            st.write(f"**Profit if PSA 9:** ${expected_profit_9:.2f}")
-            st.write(f"**Profit if PSA 10:** ${expected_profit_10:.2f}")
-            if expected_profit_9 < 0 and expected_profit_10 < 10:
-                st.warning("Grading may not be worth it based on ROI.")
-            else:
-                st.success("Could be worth grading depending on actual grade!")
 
     with col2:
         st.image(image_np, caption="Original Card Preview", use_container_width=True)
