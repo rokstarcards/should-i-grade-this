@@ -149,7 +149,8 @@ if uploaded_file:
 
     with col2:
         st.markdown("<div class='section-header'>🖼️ Card Preview</div>", unsafe_allow_html=True)
-    show_edges = st.checkbox("Show edge detection overlay", value=False)
+        show_edges = st.checkbox("Show edge detection overlay", value=False)
+
         if show_edges:
             edge_preview = cv2.Canny(cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY), 100, 200)
             edge_preview_rgb = cv2.cvtColor(edge_preview, cv2.COLOR_GRAY2RGB)
@@ -180,4 +181,5 @@ if uploaded_file:
                 y_pos = y - 60 + i * 25
                 cv2.putText(annotated, text, (x, max(20, y_pos)), label_font, 0.6, (255,255,255), 4, cv2.LINE_AA)
                 cv2.putText(annotated, text, (x, max(20, y_pos)), label_font, 0.6, color, 1, cv2.LINE_AA)
+
             st.image(annotated, caption="Card with Centering + Corner Markers", use_container_width=True)
