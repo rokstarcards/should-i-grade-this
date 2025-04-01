@@ -58,27 +58,6 @@ def analyze_corners(image, rect):
 
     return round(sharpness_score, 2)
 
-if uploaded_file:
-    image = Image.open(uploaded_file)
-    image_np = np.array(image.convert("RGB"))
-
-    st.image(image_np, caption="Uploaded Card", use_column_width=True)
-
-    center_score, card_rect = analyze_centering(image_np)
-    corner_score = analyze_corners(image_np, card_rect)
-
-    st.subheader("🔍 Analysis Results")
-    st.write(f"**Centering Score:** {center_score}/100")
-    st.write(f"**Corner Sharpness Score:** {corner_score}/100")
-
-    if center_score > 85 and corner_score > 80:
-        st.success("Looks like a good candidate for grading!")
-    else:
-        st.warning("Might not be worth grading — check centering and corners.")
-
-    st.markdown("---")
-    st.caption("This is an MVP demo using basic image processing with OpenCV. Future versions will include AI-based surface and grading predictions.")
-
 def analyze_surface(image, rect):
     x, y, w, h = rect
     if w == 0 or h == 0:
@@ -105,3 +84,26 @@ def analyze_surface(image, rect):
 
     return round(surface_score, 2)
 
+if uploaded_file:
+    image = Image.open(uploaded_file)
+    image_np = np.array(image.convert("RGB"))
+
+    st.image(image_np, caption="Uploaded Card", use_column_width=True)
+
+    center_score, card_rect = analyze_centering(image_np)
+    corner_score = analyze_corners(image_np, card_rect)
+    surface_score = analyze_surface(image_np, card_rect)
+
+    st.subheader("🔍 Analysis Results")
+    st.write(f"**Centering Score:** {center_score}/100")
+    st.write(f"**Corner Sharpness Score:** {corner_score}/100")
+    st.write(f"**Surface Quality Score:** {surface_score}/100")
+
+    if center_score > 85 and corner_score > 80 and surface_score > 75:
+        st.success("Looks like a solid candidate for grading!")
+    else:
+        st.warning("May not be worth grading — one or more areas could hurt your grade.")
+
+
+    st.markdown("---")
+    st.caption("This is an MVP demo using basic image processing with OpenCV. Future versions will include AI-based surface and grading predictions.")
