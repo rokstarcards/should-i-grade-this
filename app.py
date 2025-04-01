@@ -118,14 +118,15 @@ if uploaded_file:
         if avg_score > 90:
             grade_prediction = "⭐ Most likely grade: PSA 10 ⭐"
             st.markdown(f"<div style='background-color:#28a745;color:white;padding:10px;border-radius:5px;text-align:center;font-weight:bold'>{grade_prediction}</div>", unsafe_allow_html=True)
-
-
-    with col1:
-
-
+        elif avg_score > 80:
+            grade_prediction = "Most likely grade: PSA 9"
+            st.markdown(f"<div style='background-color:#4CAF50;color:white;padding:10px;border-radius:5px;text-align:center;font-weight:bold'>{grade_prediction}</div>", unsafe_allow_html=True)
         else:
             grade_prediction = "Most likely grade: PSA 8 or lower"
             st.markdown(f"<div style='background-color:#cc0000;color:white;padding:10px;border-radius:5px;text-align:center;font-weight:bold'>{grade_prediction}</div>", unsafe_allow_html=True)
+
+
+    with col1:
 
         st.markdown("<div class='section-header'>📊 Scores</div>", unsafe_allow_html=True)
         score_data = {
