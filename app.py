@@ -29,8 +29,7 @@ with col_u1:
     uploaded_file = st.file_uploader("Upload a card image (JPG/PNG)", type=["jpg", "jpeg", "png"])
 
 with col_u2:
-    st.markdown("<div class='section-header'>📝 Card Details</div>", unsafe_allow_html=True)
-    card_title = st.text_input("Card Title (Optional)", placeholder="e.g. 2023 Topps Chrome J-Rod Refractor")
+        card_title = st.text_input("Card Title (Optional)", placeholder="e.g. 2023 Topps Chrome J-Rod Refractor")
 
 # ---- Analysis Functions ----
 def analyze_centering(image):
@@ -114,7 +113,7 @@ if uploaded_file:
     edge_score = analyze_edges(image_np, card_rect)
     
     col1, col2 = st.columns([1, 1])
-    with col1:
+    with col2:
         avg_score = (center_score + corner_score + surface_score + edge_score) / 4
         if avg_score > 90:
             grade_prediction = "⭐ Most likely grade: PSA 10 ⭐"
@@ -134,8 +133,7 @@ if uploaded_file:
             "📏 Edges": edge_score
         }
         for label, score in score_data.items():
-            color = "green" if score > 90 else "orange" if score > 75 else "red"
-            st.markdown(f"<div style='padding:6px 12px; margin:4px 0; background-color:#f7f7f7; border-left: 6px solid {color}; font-size: 1em;'>🎯 <strong>{label}</strong>: {score}/100</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='padding:6px 0; font-size: 1em;'>🎯 <strong>{label}</strong>: {score}/100</div>", unsafe_allow_html=True)
 
         st.markdown("<div class='section-header'>📈 Grading ROI Estimator</div>", unsafe_allow_html=True)
         with st.expander("Estimate Grading ROI"):
@@ -153,5 +151,4 @@ if uploaded_file:
                 st.success("Could be worth grading depending on actual grade!")
 
     with col2:
-        st.markdown("<div class='section-header'>🖼️ Card Preview</div>", unsafe_allow_html=True)
         st.image(image_np, caption="Original Card Preview", use_container_width=True)
