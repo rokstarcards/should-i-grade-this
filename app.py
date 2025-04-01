@@ -139,11 +139,16 @@ if uploaded_file:
             st.markdown(f"<div style='padding:6px 0; font-size: 1em;'>🎯 <strong>{label}</strong>: {score}/100</div>", unsafe_allow_html=True)
 
         st.markdown("<div class='section-header'>📈 Grading ROI Estimator</div>", unsafe_allow_html=True)
-        with st.expander("Estimate Grading ROI"):
-            raw_value = st.number_input("Estimated Raw Card Value ($)", min_value=0.0, value=20.0)
+        cols1 = st.columns(2)
+        with cols1[0]:
+            raw_value = st.number_input("Raw Value ($)", min_value=0.0, value=20.0)
+        with cols1[1]:
             grading_cost = st.number_input("Grading Cost ($)", min_value=0.0, value=19.0)
-            psa9_value = st.number_input("Estimated PSA 9 Value ($)", min_value=0.0, value=35.0)
-            psa10_value = st.number_input("Estimated PSA 10 Value ($)", min_value=0.0, value=65.0)
+        cols2 = st.columns(2)
+        with cols2[0]:
+            psa9_value = st.number_input("PSA 9 Value ($)", min_value=0.0, value=35.0)
+        with cols2[1]:
+            psa10_value = st.number_input("PSA 10 Value ($)", min_value=0.0, value=65.0)
             expected_profit_9 = psa9_value - grading_cost
             expected_profit_10 = psa10_value - grading_cost
             st.write(f"**Profit if PSA 9:** ${expected_profit_9:.2f}")
