@@ -1,3 +1,4 @@
+# === Should I Grade This? PSA Prep Tool ===
 import streamlit as st
 import cv2
 import numpy as np
@@ -28,26 +29,20 @@ with col_u1:
     uploaded_file = st.file_uploader("Upload a card image (JPG/PNG)", type=["jpg", "jpeg", "png"])
 
 with col_u2:
-    file_details = st.file_uploader('Card Image Details')
-    if uploaded_file:
-        st.markdown(f'**Filename:** {uploaded_file.name}')
-        st.markdown(f'**File Size:** {uploaded_file.size / 1024:.2f} KB')
+        card_title = st.text_input("Card Title (Optional)", placeholder="e.g. 2023 Topps Chrome J-Rod Refractor")
 
 # ---- Analysis Functions ----
-def analyze_centering(image, rect):
-    x, y, w, h = rect
-    if w == 0 or h == 0:
-        return 0
+def analyze_centering(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
     edges = cv2.Canny(blurred, 50, 150)
     contours, _ = cv2.findContours(edges.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if not contours:
-        return 0
+        return 0, (0, 0, 0, 0)
     card_contour = max(contours, key=cv2.contourArea)
-    card_center_x = x + w / 2
-    card_center_y = y + h / 2
+    x, y, w, h = cv2.boundingRect(card_contour)
     img_center_x, img_center_y = image.shape[1] / 2, image.shape[0] / 2
+    card_center_x, card_center_y = x + w / 2, y + h / 2
     off_center_x = abs(img_center_x - card_center_x) / img_center_x
     off_center_y = abs(img_center_y - card_center_y) / img_center_y
     center_score = max(0, 100 - (off_center_x + off_center_y) * 100)
@@ -107,50 +102,63 @@ def analyze_edges(image, rect):
     score = 100 - min(edge_density * 400, 100)
     return round(score, 2)
 
+
 # ---- Main Logic ----
 if uploaded_file:
-    # Step 1: Load and prepare the image
     image = Image.open(uploaded_file)
     image_np = np.array(image.convert("RGB"))
+    center_score, card_rect = analyze_centering(image_np)
+    corner_score = analyze_corners(image_np, card_rect)
+    surface_score = analyze_surface(image_np, card_rect)
+    edge_score = analyze_edges(image_np, card_rect)
+    
+    col1, col2 = st.columns([1, 1])
+    with col2:
+        avg_score = (center_score + corner_score + surface_score + edge_score) / 4
+        if avg_score > 90:
+            grade_prediction = "⭐ Most likely grade: PSA 10 ⭐"
+            st.markdown(f"<div style='background-color:#28a745;color:white;padding:10px;border-radius:5px;text-align:center;font-weight:bold'>{grade_prediction}</div>", unsafe_allow_html=True)
+        elif avg_score > 80:
+            grade_prediction = "Most likely grade: PSA 9"
+            st.markdown(f"<div style='background-color:#4CAF50;color:white;padding:10px;border-radius:5px;text-align:center;font-weight:bold'>{grade_prediction}</div>", unsafe_allow_html=True)
+        else:
+            grade_prediction = "Most likely grade: PSA 8 or lower"
+            st.markdown(f"<div style='background-color:#cc0000;color:white;padding:10px;border-radius:5px;text-align:center;font-weight:bold'>{grade_prediction}</div>", unsafe_allow_html=True)
 
-    # Step 2: Automatically detect the edges and bounding box
-    gray = cv2.cvtColor(image_np, cv2.COLOR_BGR2GRAY)
-    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-    edges = cv2.Canny(blurred, 50, 150)
-    contours, _ = cv2.findContours(edges.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    if contours:
-        card_contour = max(contours, key=cv2.contourArea)
-        x, y, w, h = cv2.boundingRect(card_contour)
-        detected_card_rect = (x, y, w, h)
-    else:
-        detected_card_rect = (0, 0, 0, 0)  # Default if no edges detected
 
-    # Step 3: Show detected bounding box for the card
-    image_with_box = image_np.copy()
-    if detected_card_rect != (0, 0, 0, 0):
-        cv2.rectangle(image_with_box, (detected_card_rect[0], detected_card_rect[1]), (detected_card_rect[0] + detected_card_rect[2], detected_card_rect[1] + detected_card_rect[3]), (0, 255, 0), 2)
+    with col1:
 
-    st.image(image_with_box, caption="Detected Card", use_container_width=True)
+        st.markdown("<div class='section-header'>📊 Scores</div>", unsafe_allow_html=True)
+        score_data = {
+            "📍 Centering": center_score,
+            "🔺 Corners": corner_score,
+            "✨ Surface": surface_score,
+            "📏 Edges": edge_score
+        }
+        for label, score in score_data.items():
+            st.markdown(f"<div style='padding:6px 0; font-size: 1em;'>🎯 <strong>{label}</strong>: {score}/100</div>", unsafe_allow_html=True)
 
-    # User manually adjusts the bounding box
-    adjusted_rect = st.slider("Adjust card edges (x1, y1, width, height)", 0, 1000, (detected_card_rect[0], detected_card_rect[1], detected_card_rect[2], detected_card_rect[3]), step=1)
-    adjusted_x, adjusted_y, adjusted_w, adjusted_h = adjusted_rect
+        st.markdown("<div class='section-header'>📈 Grading ROI Estimator</div>", unsafe_allow_html=True)
+        cols1 = st.columns(2)
+        with cols1[0]:
+            raw_value = st.number_input("Raw Value ($)", min_value=0.0, value=20.0)
+        with cols1[1]:
+            grading_cost = st.number_input("Grading Cost ($)", min_value=0.0, value=19.0)
+        cols2 = st.columns(2)
+        with cols2[0]:
+            psa9_value = st.number_input("PSA 9 Value ($)", min_value=0.0, value=35.0)
+            st.markdown(f"<span style='font-size: 0.9em;'>💵 <strong>Profit:</strong> ${psa9_value - grading_cost:.2f}</span>", unsafe_allow_html=True)
+        with cols2[1]:
+            psa10_value = st.number_input("PSA 10 Value ($)", min_value=0.0, value=65.0)
+            st.markdown(f"<span style='font-size: 0.9em;'>💰 <strong>Profit:</strong> ${psa10_value - grading_cost:.2f}</span>", unsafe_allow_html=True)
 
-    # Step 4: Recalculate centering score based on adjusted rectangle
-    center_score, card_rect = analyze_centering(image_np, (adjusted_x, adjusted_y, adjusted_w, adjusted_h))
+        expected_profit_9 = psa9_value - grading_cost
+        expected_profit_10 = psa10_value - grading_cost
 
-    # Step 5: Calculate ROI
-    raw_value = st.number_input("Raw Value ($)", min_value=0.0, value=20.0)
-    grading_cost = st.number_input("Grading Cost ($)", min_value=0.0, value=19.0)
-    psa9_value = st.number_input("PSA 9 Value ($)", min_value=0.0, value=35.0)
-    psa10_value = st.number_input("PSA 10 Value ($)", min_value=0.0, value=65.0)
+        if expected_profit_9 < 0 and expected_profit_10 < 10:
+            st.warning("Grading may not be worth it based on ROI.")
+        else:
+            st.success("Could be worth grading depending on actual grade!")
 
-    expected_profit_9 = (psa9_value - grading_cost) + raw_value
-    expected_profit_10 = (psa10_value - grading_cost) + raw_value
-
-    # Display profits
-    st.markdown(f"<span style='font-size: 1.2em; font-weight:bold;'>💵 <strong>Profit if PSA 9:</strong> ${expected_profit_9:.2f}</span>", unsafe_allow_html=True)
-    st.markdown(f"<span style='font-size: 1.2em; font-weight:bold;'>💰 <strong>Profit if PSA 10:</strong> ${expected_profit_10:.2f}</span>", unsafe_allow_html=True)
-
-    # Display centering score
-    st.write(f"Centering Score: {center_score}/100")
+    with col2:
+        st.image(image_np, caption="Original Card Preview", use_container_width=True)
