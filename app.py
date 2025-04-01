@@ -148,7 +148,7 @@ if uploaded_file:
                 st.success("Could be worth grading depending on actual grade!")
 
     with col2:
-    st.markdown("<div class='section-header'>🖼️ Card Preview</div>", unsafe_allow_html=True)
+        st.markdown("<div class='section-header'>🖼️ Card Preview</div>", unsafe_allow_html=True)
                     show_edges = st.checkbox("Show edge detection overlay", value=False)
         if show_edges:
             edge_preview = cv2.Canny(cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY), 100, 200)
@@ -156,11 +156,26 @@ if uploaded_file:
             overlay_img = cv2.addWeighted(image_np, 0.7, edge_preview_rgb, 0.3, 0)
             st.image(overlay_img, caption="Card with Edge Detection Overlay", use_container_width=True)
         else:
-            # Draw bounding box and corner markers
+            # Draw bounding box, corner markers, and score labels
             x, y, w, h = card_rect
             annotated = image_np.copy()
             cv2.rectangle(annotated, (x, y), (x+w, y+h), (0, 255, 0), 2)
             corners = [(x, y), (x+w, y), (x, y+h), (x+w, y+h)]
             for cx, cy in corners:
                 cv2.circle(annotated, (cx, cy), 6, (0, 0, 255), -1)
+
+            label_font = cv2.FONT_HERSHEY_SIMPLEX
+            label_color = (0, 0, 0)
+            label_bg = (255, 255, 255)
+
+            scores_text = [
+                f"Centering: {center_score}",
+                f"Corners: {corner_score}",
+                f"Surface: {surface_score}",
+                f"Edges: {edge_score}"
+            ]
+            for i, text in enumerate(scores_text):
+                y_pos = y - 60 + i * 20
+                cv2.putText(annotated, text, (x, max(15, y_pos)), label_font, 0.5, label_bg, 4, cv2.LINE_AA)
+                cv2.putText(annotated, text, (x, max(15, y_pos)), label_font, 0.5, label_color, 1, cv2.LINE_AA)
             st.image(annotated, caption="Card with Centering + Corner Markers", use_container_width=True)
