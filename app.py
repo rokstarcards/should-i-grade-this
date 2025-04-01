@@ -153,7 +153,7 @@ if uploaded_file:
             st.markdown(f"<span style='font-size: 0.9em;'>💰 <strong>Profit:</strong> ${psa10_value - grading_cost:.2f}</span>", unsafe_allow_html=True)
 
         expected_profit_9 = psa9_value - grading_cost
-        expected_profit_10 = psa10_value - grading_cost", unsafe_allow_html=True)
+        expected_profit_10 = psa10_value - grading_cost
 
         if expected_profit_9 < 0 and expected_profit_10 < 10:
             st.warning("Grading may not be worth it based on ROI.")
