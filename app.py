@@ -78,3 +78,30 @@ if uploaded_file:
 
     st.markdown("---")
     st.caption("This is an MVP demo using basic image processing with OpenCV. Future versions will include AI-based surface and grading predictions.")
+
+def analyze_surface(image, rect):
+    x, y, w, h = rect
+    if w == 0 or h == 0:
+        return 0
+
+    surface_region = image[y+20:y+h-20, x+20:x+w-20]  # Crop out border and corners
+    if surface_region.size == 0:
+        return 0
+
+    # Convert to grayscale for analysis
+    gray = cv2.cvtColor(surface_region, cv2.COLOR_BGR2GRAY)
+
+    # 1. Check for excessive texture/noise (blotchiness, dirt, etc.)
+    lap_var = cv2.Laplacian(gray, cv2.CV_64F).var()
+
+    # 2. Check for glare (overexposed white spots)
+    overexposed_pixels = np.sum(gray > 240)
+    glare_ratio = overexposed_pixels / gray.size
+
+    # Normalize to score
+    glare_penalty = min(glare_ratio * 100, 40)  # Max penalty of 40
+    base_score = min(100, lap_var)
+    surface_score = max(0, base_score - glare_penalty)
+
+    return round(surface_score, 2)
+
