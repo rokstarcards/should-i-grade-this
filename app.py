@@ -194,5 +194,4 @@ if uploaded_file:
     with col2:
         st.markdown("<div class='section-header'>🖼️ Card Preview</div>", unsafe_allow_html=True)
         show_heatmap = st.checkbox("Show surface heatmap overlay", value=False)
-        st.image(heatmap_img if show_heatmap else image_np, caption=f"Uploaded Card
-{grade_prediction}", use_container_width=True)
+        st.image(heatmap_img if show_heatmap else image_np, caption=f"Uploaded Card — {grade_prediction}", use_container_width=True)
