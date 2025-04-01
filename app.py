@@ -59,26 +59,30 @@ def analyze_corners(image, rect):
 
     # Extract and analyze each corner region
     corner_regions = [
-        image[y:y+20, x:x+20],               # top-left
-        image[y:y+20, x+w-20:x+w],           # top-right
-        image[y+h-20:y+h, x:x+20],           # bottom-left
-        image[y+h-20:y+h, x+w-20:x+w]        # bottom-right
+        image[y:y+25, x:x+25],                 # top-left
+        image[y:y+25, x+w-25:x+w],             # top-right
+        image[y+h-25:y+h, x:x+25],             # bottom-left
+        image[y+h-25:y+h, x+w-25:x+w]          # bottom-right
     ]
 
-    sharpness_scores = []
+    scores = []
     for region in corner_regions:
         if region.size == 0:
             continue
         gray = cv2.cvtColor(region, cv2.COLOR_BGR2GRAY)
         lap_var = cv2.Laplacian(gray, cv2.CV_64F).var()
-        sharpness_scores.append(lap_var)
+        # Apply custom curve: ideal range is ~10–40
+        if lap_var < 5:
+            score = 20
+        elif lap_var < 15:
+            score = 40 + (lap_var - 5) * 4  # 40 to 80
+        elif lap_var < 40:
+            score = 80 + (lap_var - 15) * 0.8  # up to 100
+        else:
+            score = 95  # flatten out high Lap variance (often over-sharpened or glare)
+        scores.append(score)
 
-    if not sharpness_scores:
-        return 0
-
-    avg_sharpness = np.mean(sharpness_scores)
-    score = np.clip((avg_sharpness / 120) * 100, 0, 100)
-    return round(score, 2)
+    return round(np.mean(scores), 2) if scores else 0
 
 def analyze_surface(image, rect):
     x, y, w, h = rect
