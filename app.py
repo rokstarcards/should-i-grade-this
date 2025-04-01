@@ -26,19 +26,20 @@ st.markdown("""
 st.title("📸 Should I Grade This?")
 st.markdown("Upload a sports card image and get centering, corner sharpness, and surface scores — with a visual heatmap, ROI estimator, and PDF report.")
 
-# ---- Upload ----
-uploaded_file = st.file_uploader("Upload a card image (JPG/PNG)", type=["jpg", "jpeg", "png"])
+# ---- Upload & Card Details Side by Side ----
+col_u1, col_u2 = st.columns([1, 1])
+with col_u1:
+    uploaded_file = st.file_uploader("Upload a card image (JPG/PNG)", type=["jpg", "jpeg", "png"])
 
-# ---- User Input ----
+with col_u2:
+    st.markdown("<div class='section-header'>📝 Card Details</div>", unsafe_allow_html=True)
+    card_title = st.text_input("Card Title (Optional)", placeholder="e.g. 2023 Topps Chrome J-Rod Refractor")
+    card_notes = st.text_area("Notes (Optional)", placeholder="e.g. Pulled from hobby box, looks sharp!")
 st.markdown("<div class='section-header'>📝 Card Details</div>", unsafe_allow_html=True)
 card_title = st.text_input("Card Title (Optional)", placeholder="e.g. 2023 Topps Chrome J-Rod Refractor")
 card_notes = st.text_area("Notes (Optional)", placeholder="e.g. Pulled from hobby box, looks sharp!")
 
-st.markdown("<div class='section-header'>💸 Grading ROI Estimator</div>", unsafe_allow_html=True)
-raw_value = st.number_input("Estimated Raw Card Value ($)", min_value=0.0, value=20.0)
-grading_cost = st.number_input("Grading Cost ($)", min_value=0.0, value=19.0)
-psa9_value = st.number_input("Estimated PSA 9 Value ($)", min_value=0.0, value=35.0)
-psa10_value = st.number_input("Estimated PSA 10 Value ($)", min_value=0.0, value=65.0)
+", min_value=0.0, value=65.0)
 
 # ---- Analysis Functions ----
 def analyze_centering(image):
@@ -164,7 +165,12 @@ if uploaded_file:
         else:
             st.error("Most likely grade: Below PSA 8")
 
-        st.markdown("<div class='section-header'>📈 Grading ROI Estimate</div>", unsafe_allow_html=True)
+        st.markdown("<div class='section-header'>📈 Grading ROI Estimator</div>", unsafe_allow_html=True)
+        raw_value = st.number_input("Estimated Raw Card Value ($)", min_value=0.0, value=20.0)
+        grading_cost = st.number_input("Grading Cost ($)", min_value=0.0, value=19.0)
+        psa9_value = st.number_input("Estimated PSA 9 Value ($)", min_value=0.0, value=35.0)
+        psa10_value = st.number_input("Estimated PSA 10 Value ($)", min_value=0.0, value=65.0)
+
         expected_profit_9 = psa9_value - grading_cost
         expected_profit_10 = psa10_value - grading_cost
         st.write(f"**Profit if PSA 9:** ${expected_profit_9:.2f}")
@@ -185,4 +191,5 @@ if uploaded_file:
 
     with col2:
         st.markdown("<div class='section-header'>🖼️ Card Preview</div>", unsafe_allow_html=True)
-        st.image(image_np, caption="Uploaded Card", use_container_width=True)
+        show_heatmap = st.checkbox("Show surface heatmap overlay", value=False)
+        st.image(heatmap_img if show_heatmap else image_np, caption="Uploaded Card", use_container_width=True)
