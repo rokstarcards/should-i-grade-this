@@ -135,6 +135,8 @@ def create_grading_report(center, corner, surface, label, notes, original_img, h
     pdf.ln(5)
     pdf.cell(200, 10, txt="Surface Heatmap Overlay:", ln=True)
     pdf.image(heat_path, w=150)
+    safe_prediction = grade_prediction.encode("ascii", "ignore").decode()
+    pdf.cell(200, 10, txt=f"Grade Prediction: {safe_prediction}", ln=True)
     pdf_output = pdf.output(dest='S').encode('latin1')
     return pdf_output
 
@@ -184,14 +186,7 @@ if uploaded_file:
             else:
                 st.success("Could be worth grading depending on actual grade!")
 
-        st.markdown("<div class='section-header'>📤 Export Report</div>", unsafe_allow_html=True)
-        pdf_data = create_grading_report(center_score, corner_score, surface_score, card_title, card_notes, image_np, heatmap_img, grade_prediction)
-        st.download_button(
-            label="📄 Download PDF Report",
-            data=pdf_data,
-            file_name="grading_report.pdf",
-            mime="application/pdf"
-        )
+        
 
     with col2:
         st.markdown("<div class='section-header'>🖼️ Card Preview</div>", unsafe_allow_html=True)
