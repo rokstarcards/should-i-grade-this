@@ -32,9 +32,7 @@ with col_u1:
     uploaded_file = st.file_uploader("Upload a card image (JPG/PNG)", type=["jpg", "jpeg", "png"])
 
 with col_u2:
-    st.markdown("<div class='section-header'>📝 Card Details</div>", unsafe_allow_html=True)
-    card_title = st.text_input("Card Title (Optional)", placeholder="e.g. 2023 Topps Chrome J-Rod Refractor")
-    card_notes = st.text_area("Notes (Optional)", placeholder="e.g. Pulled from hobby box, looks sharp!")
+    lled from hobby box, looks sharp!")
 st.markdown("<div class='section-header'>📝 Card Details</div>", unsafe_allow_html=True)
 card_title = st.text_input("Card Title (Optional)", placeholder="e.g. 2023 Topps Chrome J-Rod Refractor")
 card_notes = st.text_area("Notes (Optional)", placeholder="e.g. Pulled from hobby box, looks sharp!")
