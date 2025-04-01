@@ -4,8 +4,6 @@ import cv2
 import numpy as np
 from PIL import Image
 from io import BytesIO
-from fpdf import FPDF
-import tempfile
 
 # ---- Page Config ----
 st.set_page_config(page_title="Should I Grade This?", page_icon="📸")
@@ -107,40 +105,7 @@ def generate_surface_heatmap(image, rect):
     heatmap_full[y+20:y+h-20, x+20:x+w-20] = cv2.addWeighted(surface_region, 0.6, heatmap, 0.4, 0)
     return heatmap_full
 
-def create_grading_report(center, corner, surface, label, notes, original_img, heatmap_img, grade_prediction):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=16)
-    pdf.cell(200, 10, txt="Grading Pre-Check Report", ln=True, align="C")
-    pdf.set_font("Arial", size=12)
-    pdf.ln(10)
-    if label:
-        pdf.cell(200, 10, txt=f"Card: {label}", ln=True)
-    if notes:
-        pdf.multi_cell(0, 10, txt=f"Notes: {notes}")
-    pdf.cell(200, 10, txt=f"Centering Score: {center}/100", ln=True)
-    pdf.cell(200, 10, txt=f"Corner Sharpness Score: {corner}/100", ln=True)
-    pdf.cell(200, 10, txt=f"Surface Score: {surface}/100", ln=True)
-    pdf.ln(5)
-    pdf.set_font("Arial", 'B', 12)
-    pdf.set_text_color(0, 102, 204)
-    pdf.cell(200, 10, txt=f"Grade Prediction: {grade_prediction}", ln=True)
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp_orig:
-        Image.fromarray(cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)).save(tmp_orig.name)
-        orig_path = tmp_orig.name
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp_heat:
-        Image.fromarray(cv2.cvtColor(heatmap_img, cv2.COLOR_BGR2RGB)).save(tmp_heat.name)
-        heat_path = tmp_heat.name
-    pdf.ln(10)
-    pdf.cell(200, 10, txt="Original Card Image:", ln=True)
-    pdf.image(orig_path, w=150)
-    pdf.ln(5)
-    pdf.cell(200, 10, txt="Surface Heatmap Overlay:", ln=True)
-    pdf.image(heat_path, w=150)
-    safe_prediction = grade_prediction.encode("ascii", "ignore").decode()
-    pdf.cell(200, 10, txt=f"Grade Prediction: {safe_prediction}", ln=True)
-    pdf_output = pdf.output(dest='S').encode('latin1')
-    return pdf_output
+
 
 # ---- Main Flow ----
 if uploaded_file:
@@ -168,8 +133,7 @@ if uploaded_file:
         st.markdown(f"**Corners:** {corner_score}/100")
         st.markdown(f"**Surface:** {surface_score}/100")
 
-                    st.markdown(f"<div style='background-color:#cc0000;color:white;padding:10px;border-radius:5px;text-align:center;font-weight:bold'>{grade_prediction}</div>", unsafe_allow_html=True)
-
+                    
         
 
         st.markdown("<div class='section-header'>📈 Grading ROI Estimator</div>", unsafe_allow_html=True)
@@ -193,6 +157,6 @@ if uploaded_file:
     with col2:
         st.markdown("<div class='section-header'>🖼️ Card Preview</div>", unsafe_allow_html=True)
         show_heatmap = st.checkbox("Show surface heatmap overlay", value=False)
-        st.image(heatmap_img if show_heatmap else image_np, caption=f"Uploaded Card — {grade_prediction}", use_container_width=True)
+        st.image(heatmap_img if show_heatmap else image_np, use_container_width=True)
 
         
