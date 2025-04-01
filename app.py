@@ -5,6 +5,9 @@ from PIL import Image
 from io import BytesIO
 from fpdf import FPDF
 import tempfile
+from torchvision import models, transforms
+import torch
+from torch import nn
 
 # ---- Page Config ----
 st.set_page_config(page_title="Should I Grade This?", page_icon="📸")
@@ -130,7 +133,7 @@ if uploaded_file:
     image = Image.open(uploaded_file)
     image_np = np.array(image.convert("RGB"))
 
-    st.image(image_np, caption="Uploaded Card", use_column_width=True)
+    st.image(image_np, caption="Uploaded Card", use_container_width=True)
 
     center_score, card_rect = analyze_centering(image_np)
     corner_score = analyze_corners(image_np, card_rect)
@@ -141,7 +144,7 @@ if uploaded_file:
     show_heatmap = st.checkbox("Show surface heatmap overlay", value=True)
     if show_heatmap:
         st.subheader("🧯 Surface Heatmap (Experimental)")
-        st.image(heatmap_img, caption="Problem areas: red = rough surface / glare", use_column_width=True)
+        st.image(heatmap_img, caption="Problem areas: red = rough surface / glare", use_container_width=True)
 
         heatmap_pil = Image.fromarray(cv2.cvtColor(heatmap_img, cv2.COLOR_BGR2RGB))
         img_buffer = BytesIO()
