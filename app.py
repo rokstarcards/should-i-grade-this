@@ -121,7 +121,8 @@ def create_grading_report(center, corner, surface, label, notes, original_img, h
     pdf.cell(200, 10, txt="Surface Heatmap Overlay:", ln=True)
     pdf.image(heat_path, w=150)
     output_buffer = BytesIO()
-    pdf.output(output_buffer)
+    pdf_output = pdf.output(dest='S').encode('latin1')
+    return pdf_output
     return output_buffer.getvalue()
 
 # ---- Main Flow ----
