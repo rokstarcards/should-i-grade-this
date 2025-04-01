@@ -33,9 +33,7 @@ with col_u1:
 
 with col_u2:
     st.markdown("<div class='section-header'>📝 Card Details</div>", unsafe_allow_html=True)
-    card_title = st.text_input("Card Title (Optional)", placeholder="e.g. 2023 Topps Chrome J-Rod Refractor")
-    card_notes = st.text_area("Notes (Optional)", placeholder='e.g. Pulled from hobby box, looks sharp!')
-
+    
 
 # ---- Analysis Functions ----
 def analyze_centering(image):
