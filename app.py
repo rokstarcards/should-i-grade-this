@@ -149,8 +149,18 @@ if uploaded_file:
             psa9_value = st.number_input("PSA 9 Value ($)", min_value=0.0, value=35.0)
         with cols2[1]:
             psa10_value = st.number_input("PSA 10 Value ($)", min_value=0.0, value=65.0)
-            expected_profit_9 = psa9_value - grading_cost
-            expected_profit_10 = psa10_value - grading_cost
+
+        expected_profit_9 = psa9_value - grading_cost
+        expected_profit_10 = psa10_value - grading_cost
+
+        st.markdown("<div style='padding-top:0.5em; font-size: 1em;'>", unsafe_allow_html=True)
+        st.write(f"**Profit if PSA 9:** ${expected_profit_9:.2f}")
+        st.write(f"**Profit if PSA 10:** ${expected_profit_10:.2f}")
+        if expected_profit_9 < 0 and expected_profit_10 < 10:
+            st.warning("Grading may not be worth it based on ROI.")
+        else:
+            st.success("Could be worth grading depending on actual grade!")
+        st.markdown("</div>", unsafe_allow_html=True)
             st.write(f"**Profit if PSA 9:** ${expected_profit_9:.2f}")
             st.write(f"**Profit if PSA 10:** ${expected_profit_10:.2f}")
             if expected_profit_9 < 0 and expected_profit_10 < 10:
