@@ -102,7 +102,7 @@ def create_grading_report(center, corner, surface, original_img, heatmap_img):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=16)
-    pdf.cell(200, 10, txt="📋 Grading Pre-Check Report", ln=True, align="C")
+    pdf.cell(200, 10, txt="Grading Pre-Check Report", ln=True, align="C")
     pdf.set_font("Arial", size=12)
     pdf.ln(10)
     pdf.cell(200, 10, txt=f"Centering Score: {center}/100", ln=True)
