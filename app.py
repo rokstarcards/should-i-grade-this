@@ -102,21 +102,18 @@ def analyze_surface(image, rect):
     surface_score = max(0, base_score - penalty)
     return round(surface_score, 2)
 
-def generate_surface_heatmap(image, rect):
+def analyze_edges(image, rect):
     x, y, w, h = rect
     if w == 0 or h == 0:
-        return image
-    surface_region = image[y+20:y+h-20, x+20:x+w-20]
-    gray = cv2.cvtColor(surface_region, cv2.COLOR_BGR2GRAY)
-    laplacian = cv2.Laplacian(gray, cv2.CV_64F)
-    texture_map = np.abs(laplacian)
-    glare_mask = (gray > 240).astype(np.uint8) * 255
-    combined = cv2.normalize(texture_map, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
-    combined = cv2.addWeighted(combined, 0.7, glare_mask, 0.3, 0)
-    heatmap = cv2.applyColorMap(combined, cv2.COLORMAP_JET)
-    heatmap_full = image.copy()
-    heatmap_full[y+20:y+h-20, x+20:x+w-20] = cv2.addWeighted(surface_region, 0.6, heatmap, 0.4, 0)
-    return heatmap_full
+        return 0
+    edge_region = image[y:y+h, x:x+w]
+    gray = cv2.cvtColor(edge_region, cv2.COLOR_BGR2GRAY)
+    edges = cv2.Canny(gray, 100, 200)
+    edge_density = np.sum(edges) / edges.size
+    score = 100 - min(edge_density * 300, 100)  # higher edge density = lower score (jagged/broken)
+    return round(score, 2)
+
+def generate_surface_heatmap(image, rect):
 
 
 
@@ -127,11 +124,12 @@ if uploaded_file:
     center_score, card_rect = analyze_centering(image_np)
     corner_score = analyze_corners(image_np, card_rect)
     surface_score = analyze_surface(image_np, card_rect)
+    edge_score = analyze_edges(image_np, card_rect)
     heatmap_img = generate_surface_heatmap(image_np, card_rect)
 
     col1, col2 = st.columns([1, 1])
     with col1:
-        avg_score = (center_score + corner_score + surface_score) / 3
+        avg_score = (center_score + corner_score + surface_score + edge_score) / 4
         if avg_score > 90:
             grade_prediction = "⭐ Most likely grade: PSA 10 ⭐"
             st.markdown(f"<div style='background-color:#28a745;color:white;padding:10px;border-radius:5px;text-align:center;font-weight:bold'>{grade_prediction}</div>", unsafe_allow_html=True)
@@ -145,6 +143,7 @@ if uploaded_file:
         st.markdown(f"**Centering:** {center_score}/100")
         st.markdown(f"**Corners:** {corner_score}/100")
         st.markdown(f"**Surface:** {surface_score}/100")
+        st.markdown(f"**Edges:** {edge_score}/100")
 
                     
         
